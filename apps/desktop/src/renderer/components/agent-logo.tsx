@@ -52,6 +52,7 @@ const DISPLAY_NAME_TO_KEY: Record<string, string> = {
   "Qoder CN": "qoder-cn",
   QwenPaw: "qwenpaw",
   ZCode: "zcode",
+  "Muse Code": "muse-code",
   "Universal (.agents/skills)": "universal",
 }
 

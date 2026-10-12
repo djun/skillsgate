@@ -234,6 +234,15 @@ const agentRegistry: Record<string, AgentEntry> = {
     globalSkillsDir: path.join(home, ".zcode", "skills"),
     detectInstalled: () => dirExists(path.join(home, ".zcode")),
   },
+  // Muse Code's own user skill root. It also reads ~/.agents/skills directly,
+  // and its project root is .agents/skills, which PROJECT_PROBES already covers.
+  "muse-code": {
+    name: "muse-code",
+    displayName: "Muse Code",
+    shortCode: "MC",
+    globalSkillsDir: path.join(configHome, "muse", "skills"),
+    detectInstalled: () => dirExists(path.join(configHome, "muse")),
+  },
   universal: {
     name: "universal",
     displayName: "Universal (.agents/skills)",
