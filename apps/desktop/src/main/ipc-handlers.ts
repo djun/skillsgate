@@ -2430,6 +2430,14 @@ Add your skill instructions here.
     const agent = agentRegistry[agentName]
     if (!agent) throw new Error(`Unknown agent: ${agentName}`)
     const skillPath = path.join(agent.globalSkillsDir, safeName)
+    // For the universal agent this path IS the canonical copy every other agent
+    // links to. Removing it here would take the skill away from all of them and
+    // leave their symlinks dangling. Deleting the shared copy is skills:remove.
+    if (path.resolve(skillPath) === path.resolve(path.join(CANONICAL_SKILLS_DIR, safeName))) {
+      throw new Error(
+        `${agent.displayName} holds the shared copy of "${skillName}". Remove it from all tools to delete it.`,
+      )
+    }
     try {
       await fs.rm(skillPath, { recursive: true, force: true })
     } catch (err) {

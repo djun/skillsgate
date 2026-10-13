@@ -53,6 +53,10 @@ export const zhCN: Record<string, string> = {
   "Remove from all": "从所有目标移除",
   "Remove selected": "移除所选",
   "Remove skill": "移除技能",
+  "Shared copy that your other tools link to. Use Remove all to delete it.":
+    "其他工具链接到的共享副本。如需删除，请使用“全部移除”。",
+  "Universal holds the shared copy that your other tools link to, so it cannot be removed on its own.":
+    "Universal 保存着其他工具链接到的共享副本，因此无法单独移除。",
   "Delete server": "删除服务器",
   "Delete collection": "删除合集",
   "Rename collection": "重命名合集",

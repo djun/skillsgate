@@ -43,6 +43,15 @@ const DISPLAY_NAME_TO_KEY: Record<string, string> = {
   "Universal (.agents/skills)": "universal",
 }
 
+/**
+ * Universal is the shared store every other tool links to. Removing a skill
+ * from it alone would delete the copy the others depend on, so the remove
+ * dialogs never offer that.
+ */
+function isSharedStoreAgent(displayName: string): boolean {
+  return DISPLAY_NAME_TO_KEY[displayName] === "universal"
+}
+
 function StarIcon({
   size = 14,
   filled = false,
@@ -997,19 +1006,29 @@ function BulkDeleteDialog({
   onRemoveFromAgent: () => void
   onCancel: () => void
 }) {
+  // With the shared store selected there is no "this tool only" removal, so
+  // the dialog falls back to the delete-everywhere variant and says why.
+  const storeSelected = selectedAgent !== null && isSharedStoreAgent(selectedAgent)
+  const agentOnly = storeSelected ? null : selectedAgent
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-surface border border-border rounded-xl shadow-lg w-full max-w-sm mx-4 p-5 animate-slide-down">
         <h2 className="text-[14px] font-semibold text-foreground mb-1">
-          {selectedAgent
-            ? `Remove ${count} skill${count !== 1 ? "s" : ""} from ${selectedAgent}?`
+          {agentOnly
+            ? `Remove ${count} skill${count !== 1 ? "s" : ""} from ${agentOnly}?`
             : `Delete ${count} skill${count !== 1 ? "s" : ""}?`}
         </h2>
-        <p className="text-[12px] text-muted mb-5">
-          {selectedAgent
-            ? `This will remove ${count === 1 ? "this skill" : `${count} selected skills`} from ${selectedAgent} only. The skill files will remain on disk.`
+        <p className={`text-[12px] text-muted ${storeSelected ? "mb-2" : "mb-5"}`}>
+          {agentOnly
+            ? `This will remove ${count === 1 ? "this skill" : `${count} selected skills`} from ${agentOnly} only. The skill files will remain on disk.`
             : `This will remove ${count === 1 ? "this skill" : `all ${count} selected skills`} from every agent where ${count === 1 ? "it is" : "they are"} installed. This action cannot be undone.`}
         </p>
+        {storeSelected && (
+          <p className="text-[12px] text-muted mb-5">
+            {t("Universal holds the shared copy that your other tools link to, so it cannot be removed on its own.")}
+          </p>
+        )}
         <div className="flex items-center gap-2 justify-end">
           <button
             onClick={onCancel}
@@ -1017,13 +1036,13 @@ function BulkDeleteDialog({
           >
             {t("Cancel")}
           </button>
-          {selectedAgent ? (
+          {agentOnly ? (
             <>
               <button
                 onClick={onRemoveFromAgent}
                 className="bg-red-600 text-white text-[12px] px-4 py-1.5 rounded-lg hover:bg-red-700 transition-colors"
               >
-                Remove from {selectedAgent}
+                Remove from {agentOnly}
               </button>
               <button
                 onClick={onConfirm}
@@ -1085,7 +1104,7 @@ function RemoveSkillDialog({ skill, onClose, onRemoveFromAgents, onRemoveAll }: 
     setChecked((prev) => ({ ...prev, [displayName]: !prev[displayName] }))
   }
 
-  const selectedAgents = skill.agents.filter((a) => checked[a])
+  const selectedAgents = skill.agents.filter((a) => checked[a] && !isSharedStoreAgent(a))
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -1098,21 +1117,33 @@ function RemoveSkillDialog({ skill, onClose, onRemoveFromAgents, onRemoveAll }: 
         </p>
 
         <div className="flex flex-col gap-2 mb-5">
-          {skill.agents.map((agent) => (
-            <label
-              key={agent}
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-surface-hover transition-colors cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={!!checked[agent]}
-                onChange={() => toggleAgent(agent)}
-                className="rounded border-border accent-foreground"
-              />
-              <AgentLogo name={agent} size={14} />
-              <span className="text-[12px] text-foreground">{agent}</span>
-            </label>
-          ))}
+          {skill.agents.map((agent) => {
+            const locked = isSharedStoreAgent(agent)
+            return (
+              <div key={agent}>
+                <label
+                  className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md transition-colors ${
+                    locked ? "opacity-60 cursor-not-allowed" : "hover:bg-surface-hover cursor-pointer"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!locked && !!checked[agent]}
+                    disabled={locked}
+                    onChange={() => toggleAgent(agent)}
+                    className="rounded border-border accent-foreground"
+                  />
+                  <AgentLogo name={agent} size={14} />
+                  <span className="text-[12px] text-foreground">{agent}</span>
+                </label>
+                {locked && (
+                  <p className="text-[11px] text-muted pl-8 pr-2 pb-1">
+                    {t("Shared copy that your other tools link to. Use Remove all to delete it.")}
+                  </p>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         <div className="flex items-center gap-2 justify-end">
