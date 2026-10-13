@@ -23,7 +23,11 @@ mac:
     - zip
   entitlements: resources/entitlements.mac.plist
   entitlementsInherit: resources/entitlements.mac.plist
-  notarize: true
+  # Builds are signed with Developer ID but not notarized. Notarization needs
+  # an active Apple Developer Program membership; without one the notary
+  # service answers 403 and the build fails. Set back to true once a
+  # membership is active again.
+  notarize: false
 
 win:
   target: nsis

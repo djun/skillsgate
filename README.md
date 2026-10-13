@@ -37,6 +37,8 @@ Available as a **desktop app** for macOS, Windows, and Linux.
 
 [Download the latest release](https://github.com/skillsgate/skillsgate/releases/latest) for macOS (Apple Silicon or Intel), Windows, or Linux. Every release ships a DMG, an NSIS installer, an AppImage, and a Debian package.
 
+> **macOS first launch.** From 0.8.1 the macOS build is signed with a Developer ID but not notarized by Apple, so macOS blocks a freshly downloaded copy the first time you open it. Open **System Settings > Privacy & Security**, scroll to the message about SkillsGate, and click **Open Anyway**. You only need to do this once. Updates installed from inside the app do not ask again.
+
 > **Terminal UI discontinued.** The `skillsgate` and `@skillsgate/tui` npm packages are deprecated and no longer maintained. `npx skillsgate` still runs the last published version but will not receive updates. Use the desktop app instead. For command-line installs of public skills, use [`npx skills add`](https://skills.sh).
 
 ## Supported Agents
