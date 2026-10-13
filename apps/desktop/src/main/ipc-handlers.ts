@@ -1360,6 +1360,19 @@ async function discoverSkillsInDir(
 // Install skill files to an agent directory (symlink with copy fallback)
 // ---------------------------------------------------------------------------
 
+/** True when `target` is `dir` itself or sits anywhere beneath it, symlinks resolved. */
+async function isInsideDir(target: string, dir: string): Promise<boolean> {
+  const [realTarget, realDir] = await Promise.all(
+    [target, dir].map((p) => fs.realpath(p).catch(() => path.resolve(p))),
+  )
+  const relative = path.relative(realDir, realTarget)
+  return (
+    relative !== ".." &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  )
+}
+
 async function installSkillToAgent(
   skillDir: string,
   skillName: string,
@@ -1375,6 +1388,14 @@ async function installSkillToAgent(
 
     // If the agent IS the universal agent, the canonical dir IS the target
     if (path.resolve(agentTargetDir) === path.resolve(canonicalDir)) {
+      // A skill that already lives in the shared store is already installed
+      // here. Without this check the target is removed before the copy, and
+      // when the source is that same directory (a skill created in the app, or
+      // one dragged onto Universal) the skill is deleted.
+      if (await isInsideDir(skillDir, CANONICAL_SKILLS_DIR)) {
+        return { success: true }
+      }
+
       // Copy skill files directly to the canonical dir
       await fs.rm(canonicalDir, { recursive: true, force: true }).catch(() => {})
       await fs.cp(skillDir, canonicalDir, { recursive: true })
